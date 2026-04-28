@@ -2,26 +2,46 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Navigator2</title>
-<script src='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js'></script>
-<link href='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css' rel='stylesheet'>
-<style>body{margin:0;padding:0}#map{position:absolute;top:0;bottom:0;width:100%}.b{position:absolute;bottom:20px;padding:14px 20px;background:#007aff;color:white;border:0;border-radius:12px;font-weight:700;z-index:5}#h{left:15px}#d{left:110px}#n{left:220px}</style>
+<title>Navigator 2.0 - Michigan 3D</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+body{margin:0;padding:0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+#map{position:absolute;top:0;bottom:0;width:100%}
+.btn{position:absolute;bottom:25px;padding:15px 22px;background:#007AFF;color:#fff;border:none;border-radius:14px;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:10;cursor:pointer}
+#home{left:15px}#det{left:115px}#nav{left:230px}
+</style>
 </head>
 <body>
 <div id="map"></div>
-<button class="b" id="h" onclick="h()">HOME</button>
-<button class="b" id="d" onclick="d()">DETROIT</button>
-<button class="b" id="n" onclick="n()">NAV</button>
+<button class="btn" id="home">HOME</button>
+<button class="btn" id="det">DETROIT</button>
+<button class="btn" id="nav">NAV</button>
 <script>
-mapboxgl.accessToken='pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
-const m=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/satellite-streets-v12',center:[-84.0,42.6],zoom:7,pitch:45});
-m.on('load',()=>{m.addSource('dem',{type:'raster-dem',url:'mapbox://mapbox.mapbox-terrain-dem-v1'});m.setTerrain({source:'dem',exaggeration:1.5});m.addLayer({id:'3d',source:'composite','source-layer':'building',filter:['==','extrude','true'],type:'fill-extrusion',minzoom:14,paint:{'fill-extrusion-color':'#bbb','fill-extrusion-height':['get','height']}});new mapboxgl.Marker({color:'#0f0'}).setLngLat([-84.399,42.75]).addTo(m);new mapboxgl.Marker({color:'#f00'}).setLngLat([-83.0458,42.3314]).addTo(m);});
-function h(){m.flyTo({center:[-84.399,42.75],zoom:15,pitch:60,duration:2500})}
-function d(){m.flyTo({center:[-83.0458,42.3314],zoom:17,pitch:68,duration:3000})}
-
-function n(){d();setTimeout(()=>m.flyTo({center:[-83.7,42.5],zoom:10,pitch:50,duration:7000}),2000)}
+const map=new maplibregl.Map({
+  container:'map',
+  style:{
+    version:8,
+    sources:{
+      sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'ESRI'},
+      terrain:{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],tileSize:256,encoding:'terrarium'}
+    },
+    layers:[{id:'sat',type:'raster',source:'sat'}]
+  },
+  center:[-84.399,42.75],
+  zoom:12,
+  pitch:60,
+  bearing:-20
+});
+map.on('load',()=>{
+  map.setTerrain({source:'terrain',exaggeration:1.5});
+  new maplibregl.Marker({color:'#00ff00'}).setLngLat([-84.399,42.75]).setPopup(new maplibregl.Popup().setText('Haslett Home')).addTo(map);
+  new maplibregl.Marker({color:'#ff0000'}).setLngLat([-83.0458,42.3314]).setPopup(new maplibregl.Popup().setText('Detroit')).addTo(map);
+});
+document.getElementById('home').onclick=()=>map.flyTo({center:[-84.399,42.75],zoom:15,pitch:65,duration:2000});
+document.getElementById('det').onclick=()=>map.flyTo({center:[-83.0458,42.3314],zoom:17,pitch:70,bearing:30,duration:3000});
+document.getElementById('nav').onclick=()=>{map.flyTo({center:[-83.0458,42.3314],zoom:16,pitch:70,duration:2500});setTimeout(()=>map.flyTo({center:[-83.72,42.54],zoom:10,pitch:45,duration:8000}),3000)};
 </script>
 </body>
 </html>
-
